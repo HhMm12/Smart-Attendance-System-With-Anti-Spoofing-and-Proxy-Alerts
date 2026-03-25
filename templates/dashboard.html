@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Attendance — Faculty Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #070d1a;
+  --surface:   #0e1929;
+  --surface2:  #162236;
+  --border:    #1e3050;
+  --border2:   #243858;
+  --accent:    #3b82f6;
+  --accent2:   #60a5fa;
+  --green:     #10b981;
+  --red:       #ef4444;
+  --yellow:    #f59e0b;
+  --text:      #e2e8f0;
+  --muted:     #64748b;
+  --muted2:    #94a3b8;
+  --font:      'DM Sans', sans-serif;
+  --mono:      'DM Mono', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  flex-shrink: 0;
+}
+
+.logo {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; margin-bottom: 10px;
+}
+
+.logo h2 { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.logo p  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.nav-section { padding: 0 12px; margin-bottom: 8px; }
+
+.nav-label {
+  font-size: 10px; font-weight: 600; color: var(--muted);
+  letter-spacing: 1.2px; text-transform: uppercase; padding: 8px 8px 6px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 13.5px; font-weight: 500; color: var(--muted2);
+  transition: all 0.15s; margin-bottom: 2px;
+  border: none; background: none; width: 100%; text-align: left;
+}
+
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: rgba(59,130,246,0.15); color: var(--accent2); }
+.nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+.sidebar-footer {
+  margin-top: auto; padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.faculty-info { display: flex; align-items: center; gap: 10px; }
+
+.avatar {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white;
+}
+
+.faculty-info .name { font-size: 13px; font-weight: 600; }
+.faculty-info .role { font-size: 11px; color: var(--muted); }
+
+.main { flex: 1; overflow-y: auto; height: 100vh; }
+.page { display: none; padding: 28px 32px; }
+.page.active { display: block; }
+
+.topbar {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 28px;
+}
+
+.page-title h1 { font-size: 22px; font-weight: 700; }
+.page-title p  { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.topbar-right  { display: flex; align-items: center; gap: 12px; }
+
+.status-dot {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--green);
+  background: rgba(16,185,129,0.1);
+  padding: 6px 12px; border-radius: 20px;
+}
+
+.status-dot::before {
+  content: ''; width: 7px; height: 7px;
+  background: var(--green); border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.4; }
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.card-title {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
+}
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px;
+}
+
+.stat-label {
+  font-size: 11px; color: var(--muted); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
+}
+
+.stat-value { font-size: 32px; font-weight: 700; line-height: 1; font-family: var(--mono); }
+.stat-sub   { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.stat-value.green  { color: var(--green); }
+.stat-value.red    { color: var(--red); }
+.stat-value.yellow { color: var(--yellow); }
+.stat-value.blue   { color: var(--accent2); }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+.video-wrapper {
+  position: relative; background: #000;
+  border-radius: 10px; overflow: hidden; aspect-ratio: 4/3;
+}
+
+.video-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+.video-overlay {
+  position: absolute; top: 0; left: 0; right: 0; padding: 12px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+
+.live-badge {
+  background: var(--red); color: white; font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+  display: flex; align-items: center; gap: 5px;
+}
+
+.live-badge::before {
+  content: ''; width: 6px; height: 6px;
+  background: white; border-radius: 50%; animation: pulse 1s infinite;
+}
+
+.session-timer {
+  background: rgba(0,0,0,0.7); color: white;
+  font-size: 12px; font-family: var(--mono); padding: 4px 10px; border-radius: 4px;
+}
+
+.detection-grid { display: flex; flex-direction: column; gap: 10px; }
+
+.det-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; background: var(--surface2); border-radius: 8px; font-size: 13px;
+}
+
+.det-label { color: var(--muted2); }
+
+.badge {
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px; font-family: var(--mono);
+}
+
+.badge-green  { background: rgba(16,185,129,0.15);  color: var(--green); }
+.badge-red    { background: rgba(239,68,68,0.15);   color: var(--red); }
+.badge-yellow { background: rgba(245,158,11,0.15);  color: var(--yellow); }
+.badge-blue   { background: rgba(59,130,246,0.15);  color: var(--accent2); }
+.badge-gray   { background: rgba(100,116,139,0.15); color: var(--muted2); }
+
+.control-group { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+
+.input-group label {
+  display: block; font-size: 11px; font-weight: 600; color: var(--muted);
+  margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.7px;
+}
+
+input[type=text], input[type=password], select {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text); padding: 9px 12px; border-radius: 8px;
+  font-size: 13px; font-family: var(--font); outline: none; transition: border-color 0.15s;
+}
+
+input:focus, select:focus { border-color: var(--accent); }
+
+.btn {
+  padding: 9px 18px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: var(--font); transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+
+.btn:hover  { opacity: 0.88; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary { background: var(--accent); color: white; }
+.btn-green   { background: var(--green);  color: white; }
+.btn-red     { background: var(--red);    color: white; }
+.btn-ghost   { background: var(--surface2); color: var(--muted2); border: 1px solid var(--border2); }
+
+.btn-row { display: flex; gap: 8px; }
+.btn-row .btn { flex: 1; justify-content: center; }
+
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+th {
+  text-align: left; padding: 10px 12px; color: var(--muted);
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 11px 12px; border-bottom: 1px solid var(--border);
+  color: var(--muted2); vertical-align: middle;
+}
+
+td:first-child { color: var(--text); font-weight: 500; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.alert-banner {
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px; padding: 12px 14px; font-size: 13px;
+  color: #fca5a5; margin-top: 12px; display: none;
+}
+
+.alert-banner strong { display: block; margin-bottom: 4px; color: var(--red); }
+
+.conf-bar { display: flex; align-items: center; gap: 8px; }
+
+.conf-track {
+  flex: 1; height: 5px; background: var(--border2);
+  border-radius: 3px; overflow: hidden;
+}
+
+.conf-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.3s; }
+
+.enroll-layout { display: grid; grid-template-columns: 380px 1fr; gap: 24px; }
+
+.enroll-steps { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+
+.step {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; background: var(--surface2);
+  border-radius: 8px; font-size: 13px;
+}
+
+.step-num {
+  width: 24px; height: 24px; background: var(--border2);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--muted); flex-shrink: 0;
+}
+
+.step.done   .step-num { background: var(--green);  color: white; }
+.step.active .step-num { background: var(--accent); color: white; }
+
+.beh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+.metric-card { background: var(--surface2); border-radius: 10px; padding: 16px; }
+.metric-card .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+.metric-card .metric-value { font-size: 28px; font-weight: 700; font-family: var(--mono); color: var(--accent2); }
+.metric-card .metric-sub   { font-size: 11px; color: var(--green); margin-top: 4px; }
+
+.mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 40px; margin-top: 10px; }
+
+.bar { flex: 1; background: rgba(59,130,246,0.3); border-radius: 2px; transition: height 0.3s; min-height: 4px; }
+.bar.hi { background: rgba(59,130,246,0.7); }
+
+.proxy-card {
+  display: flex; gap: 20px; padding: 20px;
+  background: var(--surface2); border-radius: 12px; margin-bottom: 16px;
+}
+
+.proxy-avatar {
+  width: 80px; height: 80px; background: var(--border2);
+  border-radius: 10px; display: flex; align-items: center;
+  justify-content: center; font-size: 32px; flex-shrink: 0;
+}
+
+.proxy-info h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.proxy-info p  { font-size: 12px; color: var(--muted); }
+
+.proxy-badge {
+  margin-left: auto; align-self: flex-start;
+  background: rgba(239,68,68,0.15); color: var(--red);
+  font-size: 11px; font-weight: 700; padding: 4px 12px;
+  border-radius: 20px; border: 1px solid rgba(239,68,68,0.3);
+}
+
+.analysis-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px; background: var(--surface2);
+  border-radius: 8px; margin-bottom: 8px; font-size: 13px;
+}
+
+.analysis-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.analysis-text { color: var(--muted2); line-height: 1.5; }
+.analysis-text strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+.spoof-meter { margin-top: 16px; }
+
+.spoof-meter-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+
+.spoof-track { height: 8px; background: var(--border2); border-radius: 4px; overflow: hidden; }
+
+.spoof-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--yellow), var(--red)); transition: width 0.5s;
+}
+
+.report-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; background: var(--surface2); border-radius: 8px; margin-bottom: 8px;
+}
+
+.report-info h4 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.report-info p  { font-size: 11px; color: var(--muted); }
+
+.session-info-bar {
+  display: flex; align-items: center; gap: 20px;
+  padding: 12px 16px;
+  background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 10px; margin-bottom: 20px; font-size: 13px;
+}
+
+.session-info-bar .item { color: var(--muted2); }
+.session-info-bar .item strong { color: var(--text); }
+.session-info-bar .sep { color: var(--border2); }
+
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 12px 18px; font-size: 13px; color: var(--text);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 1000;
+  transform: translateY(80px); opacity: 0; transition: all 0.3s; max-width: 300px;
+}
+
+.toast.show    { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: rgba(16,185,129,0.4); }
+.toast.error   { border-color: rgba(239,68,68,0.4); }
+
+/* Override buttons */
+.override-btn {
+  border: none; padding: 3px 8px; border-radius: 5px;
+  cursor: pointer; font-size: 11px; font-weight: 600;
+  font-family: var(--font);
+}
+
+.override-present {
+  background: rgba(16,185,129,0.15); color: var(--green);
+  border: 1px solid rgba(16,185,129,0.3);
+}
+
+.override-absent {
+  background: rgba(239,68,68,0.15); color: var(--red);
+  border: 1px solid rgba(239,68,68,0.3);
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+.empty .icon { font-size: 32px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🎓</div>
+    <h2>Smart Attendance</h2>
+    <p>AI-Powered System</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+    <button class="nav-item active" onclick="navigate('dashboard')">
+      <span class="icon">📊</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="navigate('session')">
+      <span class="icon">📷</span> Live Session
+    </button>
+    <button class="nav-item" onclick="navigate('students')">
+      <span class="icon">👥</span> Students
+    </button>
+    <button class="nav-item" onclick="navigate('attendance')">
+      <span class="icon">📋</span> Attendance
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Analysis</div>
+    <button class="nav-item" onclick="navigate('alerts')">
+      <span class="icon">⚠️</span> Proxy Alerts
+    </button>
+    <button class="nav-item" onclick="navigate('behavioral')">
+      <span class="icon">🧠</span> Behavioral Logs
+    </button>
+    <button class="nav-item" onclick="navigate('reports')">
+      <span class="icon">📈</span> Reports
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="faculty-info">
+      <div class="avatar">F</div>
+      <div>
+        <div class="name">Faculty</div>
+        <div class="role">Instructor</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="topbar">
+      <div class="page-title">
+        <h1>Dashboard</h1>
+        <p id="dash-date">Loading...</p>
+      </div>
+      <div class="topbar-right">
+        <div class="status-dot">System Online</div>
+        <button class="btn btn-primary" onclick="navigate('session')">▶ Start Session</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value blue" id="dash-total">—</div>
+        <div class="stat-sub">Enrolled in system</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Present Today</div>
+        <div class="stat-value green" id="dash-present">—</div>
+        <div class="stat-sub">Attendance records</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Proxy Alerts</div>
+        <div class="stat-value red" id="dash-alerts">—</div>
+        <div class="stat-sub">Spoof attempts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Confidence</div>
+        <div class="stat-value yellow" id="dash-conf">—</div>
+        <div class="stat-sub">Recognition accuracy</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Recent Attendance</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th><th>Session</th><th>Confidence</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dash-attendance-table">
+              <tr><td colspan="4"><div class="empty"><div class="icon">📋</div>No records yet</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recent Proxy Alerts</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Session</th><th>Spoof Prob</th><th>Reason</th></tr>
+            </thead>
+            <tbody id="dash-alerts-table">
+              <tr><td colspan="3"><div class="empty"><div class="icon">✅</div>No alerts</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE SESSION -->
+  <div class="page" id="page-session">
+    <div class="topbar">
+      <div class="page-title">
+        <h1>Live Session</h1>
+        <p id="session-status-text">No active session</p>
+      </div>
+      <div class="topbar-right">
+        <span class="badge badge-gray" id="session-id-badge">No Session</span>
+      </div>
+    </div>
+
+    <div id="session-info-bar" class="session-info-bar" style="display:none">
+      <div class="item"><strong id="si-course">—</strong> Course</div>
+      <div class="sep">|</div>
+      <div class="item">Session <strong id="si-id">—</strong></div>
+      <div class="sep">|</div>
+      <div class="item">Started <strong id="si-time">—</strong></div>
+      <div style="margin-left:auto">
+        <button class="btn btn-red" onclick="endSession()">■ End Session</button>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">📷 Camera Feed</div>
+          <div class="video-wrapper">
+            <img id="video-feed" src="/video_feed" alt="Feed">
+            <div class="video-overlay">
+              <div class="live-badge" id="live-badge" style="display:none">LIVE</div>
+              <div class="session-timer" id="session-timer" style="display:none">00:00</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Session Setup</div>
+          <div class="control-group">
+            <div class="input-group">
+              <label>Course ID</label>
+              <input type="text" id="course-id" placeholder="e.g. CS101">
+            </div>
+            <button class="btn btn-green" onclick="startSession()" id="start-btn">
+              ▶ Start Attendance Session
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">📊 Live Detection Status</div>
+          <div class="detection-grid">
+            <div class="det-item"><span class="det-label">Face Detected</span><span class="badge badge-gray" id="det-face">—</span></div>
+            <div class="det-item"><span class="det-label">Liveness Check</span><span class="badge badge-gray" id="det-live">—</span></div>
+            <div class="det-item"><span class="det-label">Spoof Probability</span><span class="badge badge-gray" id="det-spoof">—</span></div>
+            <div class="det-item"><span class="det-label">Identity Match</span><span class="badge badge-gray" id="det-match">—</span></div>
+            <div class="det-item"><span class="det-label">Confidence Score</span><span class="badge badge-gray" id="det-conf">—</span></div>
+            <div class="det-item"><span class="det-label">Final Status</span><span class="badge badge-gray" id="det-status">—</span></div>
+          </div>
+          <div class="alert-banner" id="session-alert">
+            <strong>⚠️ Proxy Suspected</strong>
+            <span id="session-alert-text"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Session Attendance Log</div>
+          <div class="table-wrap" style="max-height:220px; overflow-y:auto">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Confidence</th><th>Time</th></tr>
+              </thead>
+              <tbody id="session-log-table">
+                <tr><td colspan="3"><div class="empty">Start session to see log</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENTS -->
+  <div class="page" id="page-students">
+    <div class="topbar">
+      <div class="page-title">
+        <h1>Student Registry</h1>
+        <p>Manage enrolled students</p>
+      </div>
+    </div>
+
+    <div class="enroll-layout">
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">Enroll New Student</div>
+          <div class="control-group">
+            <div class="input-group">
+              <label>Student ID</label>
+              <input type="text" id="enroll-id" placeholder="e.g. RA2011001">
+            </div>
+            <div class="input-group">
+              <label>Full Name</label>
+              <input type="text" id="enroll-name" placeholder="Student's full name">
+            </div>
+            <button class="btn btn-primary" onclick="enrollStudent()">📸 Enroll Student</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Enrollment Steps</div>
+          <div class="enroll-steps">
+            <div class="step" id="step1"><div class="step-num">1</div><div>Enter student ID and name</div></div>
+            <div class="step" id="step2"><div class="step-num">2</div><div>Click Enroll Student</div></div>
+            <div class="step" id="step3"><div class="step-num">3</div><div>Camera opens — look straight ahead</div></div>
+            <div class="step" id="step4"><div class="step-num">4</div><div>15 frames captured automatically</div></div>
+            <div class="step" id="step5"><div class="step-num">5</div><div>Embedding generated and stored</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+          <div class="card-title" style="margin:0">Enrolled Students</div>
+          <button class="btn btn-ghost" onclick="loadStudents()" style="font-size:12px; padding:6px 12px">🔄 Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Student ID</th><th>Name</th><th>Enrolled At</th><th>Action</th></tr>
+            </thead>
+            <tbody id="students-table">
+              <tr><td colspan="4"><div class="empty"><div class="icon">👥</div>No students enrolled</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div class="page" id="page-attendance">
+    <div class="topbar">
+      <div class="page-title">
+        <h1>Attendance Records</h1>
+        <p>All recorded attendance sessions</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost" onclick="loadAttendance()">🔄 Refresh</button>
+        <button class="btn btn-primary" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(3,1fr)">
+      <div class="stat-card">
+        <div class="stat-label">Total Records</div>
+        <div class="stat-value blue" id="att-total">0</div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Present</div>
+        <div class="stat-value green" id="att-present">0</div>
+        <div class="stat-sub">Confirmed attendance</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Rejected / Absent</div>
+        <div class="stat-value red" id="att-rejected">0</div>
+        <div class="stat-sub">Spoof rejections</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Detailed Attendance Log</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Session</th>
+              <th>Confidence</th>
+              <th>Spoof Prob</th>
+              <th>Status</th>
+              <th>Timestamp</th>
+              <th>Override</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-full-table">
+            <tr><td colspan="8"><div class="empty"><div class="icon">📋</div>No records yet</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROXY ALERTS -->
+  <div class="page" id="page-alerts">
+    <div class="topbar">
+      <div class="page-title">
+        <h1>Proxy Alerts</h1>
+        <p>Spoof detection analysis</p>
+      </div>
+    </div>
+    <div id="proxy-list"></div>
+  </div>
+
+  <!-- BEHAVIORAL LOGS -->
+  <div class="page" id="page-behavioral">
+    <div class="topbar">
+      <div class="page-title">
+        <h1>Behavioral Intelligence Logs</h1>
+        <p>Detailed biometric engagement analysis</p>
+      </div>
+    </div>
+
+    <div class="beh-grid">
+      <div class="metric-card">
+        <div class="metric-label">Avg Blink Rate</div>
+        <div class="metric-value" id="beh-blink">—</div>
+        <div class="metric-sub" id="beh-blink-sub">blinks per session</div>
+        <div class="mini-chart" id="blink-chart"></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Head Movement Consistency</div>
+        <div class="metric-value" id="beh-move">—</div>
+        <div class="metric-sub" id="beh-move-sub">avg variance score</div>
+        <div class="mini-chart" id="move-chart"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Session Behavioral Logs</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Session</th><th>Blink Count</th><th>Head Movement</th>
+              <th>EAR Value</th><th>Spoof Prob</th><th>Verdict</th><th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="behavioral-table">
+            <tr><td colspan="7"><div class="empty"><div class="icon">🧠</div>No behavioral data yet</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="page" id="page-reports">
+    <div class="topbar">
+      <div class="page-title">
+        <h1>Reports</h1>
+        <p>Export and analyze attendance data</p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Generate Report</div>
+        <div class="control-group">
+          <div class="input-group">
+            <label>Session ID (optional)</label>
+            <input type="text" id="report-session" placeholder="Leave blank for all sessions">
+          </div>
+          <button class="btn btn-primary" onclick="exportCSV()">⬇ Export Attendance CSV</button>
+          <button class="btn btn-ghost"  onclick="exportAlerts()">⬇ Export Alerts CSV</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">System Summary</div>
+        <div class="detection-grid">
+          <div class="det-item"><span class="det-label">Total Students</span><span class="badge badge-blue"   id="rep-students">—</span></div>
+          <div class="det-item"><span class="det-label">Total Sessions</span><span class="badge badge-blue"   id="rep-sessions">—</span></div>
+          <div class="det-item"><span class="det-label">Total Present</span> <span class="badge badge-green"  id="rep-present">—</span></div>
+          <div class="det-item"><span class="det-label">Total Alerts</span>  <span class="badge badge-red"    id="rep-alerts">—</span></div>
+          <div class="det-item"><span class="det-label">Avg Confidence</span><span class="badge badge-yellow" id="rep-conf">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-title">All Sessions</div>
+      <div id="session-report-list"></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let sessionActive  = false;
+let sessionStart   = null;
+let timerInterval  = null;
+let pollInterval   = null;
+let sessionLog     = [];
+
+// ── NAVIGATION ──
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.trim().toLowerCase().includes(
+      page === 'dashboard'  ? 'dashboard'  :
+      page === 'session'    ? 'live'        :
+      page === 'students'   ? 'student'     :
+      page === 'attendance' ? 'attendance'  :
+      page === 'alerts'     ? 'proxy'       :
+      page === 'behavioral' ? 'behavioral'  :
+      page === 'reports'    ? 'report'      : page
+    )) n.classList.add('active');
+  });
+  if (page === 'dashboard')   loadDashboard();
+  if (page === 'students')    loadStudents();
+  if (page === 'attendance')  loadAttendance();
+  if (page === 'alerts')      loadAlerts();
+  if (page === 'behavioral')  loadBehavioral();
+  if (page === 'reports')     loadReports();
+}
+
+// ── SESSION ──
+async function startSession() {
+  const courseId = document.getElementById('course-id').value || 'CS101';
+  const res  = await fetch('/start_session', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({course_id: courseId})
+  });
+  const data = await res.json();
+  if (data.success) {
+    sessionActive = true;
+    sessionStart  = new Date();
+    sessionLog    = [];
+    document.getElementById('live-badge').style.display    = 'flex';
+    document.getElementById('session-timer').style.display = 'block';
+    document.getElementById('session-info-bar').style.display = 'flex';
+    document.getElementById('session-status-text').textContent = 'Session active';
+    document.getElementById('si-course').textContent = courseId;
+    document.getElementById('si-id').textContent     = data.session_id;
+    document.getElementById('si-time').textContent   = new Date().toLocaleTimeString();
+    document.getElementById('session-id-badge').textContent = data.session_id;
+    document.getElementById('session-id-badge').className   = 'badge badge-green';
+    document.getElementById('start-btn').disabled = true;
+    timerInterval = setInterval(() => {
+      const e = Math.floor((new Date() - sessionStart) / 1000);
+      const m = String(Math.floor(e/60)).padStart(2,'0');
+      const s = String(e%60).padStart(2,'0');
+      document.getElementById('session-timer').textContent = m+':'+s;
+    }, 1000);
+    pollInterval = setInterval(pollResult, 600);
+    toast('Session started: ' + data.session_id, 'success');
+  }
+}
+
+async function endSession() {
+  if (!sessionActive) return;
+  const res  = await fetch('/end_session', {method: 'POST'});
+  const data = await res.json();
+  sessionActive = false;
+  clearInterval(timerInterval);
+  clearInterval(pollInterval);
+  document.getElementById('live-badge').style.display    = 'none';
+  document.getElementById('session-timer').style.display = 'none';
+  document.getElementById('session-info-bar').style.display = 'none';
+  document.getElementById('session-status-text').textContent = 'No active session';
+  document.getElementById('session-id-badge').textContent    = 'No Session';
+  document.getElementById('session-id-badge').className      = 'badge badge-gray';
+  document.getElementById('start-btn').disabled = false;
+  ['det-face','det-live','det-spoof','det-match','det-conf','det-status'].forEach(id => {
+    const el = document.getElementById(id);
+    el.textContent = '—'; el.className = 'badge badge-gray';
+  });
+  if (data.summary) {
+    const s = data.summary;
+    toast(`Session ended — ${s.total_present} present, ${s.total_alerts} alerts`, 'success');
+    loadDashboard();
+  }
+}
+
+// ── POLLING ──
+async function pollResult() {
+  try {
+    const res    = await fetch('/latest_result');
+    const result = await res.json();
+    if (!result || Object.keys(result).length === 0) return;
+    updateDetectionStatus(result);
+    updateSessionLog(result);
+  } catch(e) {}
+}
+
+function updateDetectionStatus(r) {
+  setDet('det-face',  r.face_detected ? 'YES' : 'NO', r.face_detected ? 'green' : 'gray');
+  setDet('det-live',  r.is_live ? 'LIVE ✓' : 'CHECKING', r.is_live ? 'green' : 'yellow');
+
+  const sp = r.spoof_probability || 0;
+  setDet('det-spoof', sp.toFixed(2), sp > 0.4 ? 'red' : 'green');
+
+  setDet('det-match', r.matched ? (r.student_name || 'Matched') : 'NO MATCH', r.matched ? 'green' : 'gray');
+
+  const conf = r.confidence || 0;
+  setDet('det-conf', (conf*100).toFixed(1)+'%', conf > 0.5 ? 'green' : 'gray');
+
+  const statusMap = {
+    'PRESENT'             : ['PRESENT ✓',    'green'],
+    'SPOOF_REJECTED'      : ['REJECTED ✗',   'red'],
+    'NO_MATCH'            : ['NO MATCH',      'yellow'],
+    'NO_FACE'             : ['NO FACE',       'gray'],
+    'PROCESSING'          : ['PROCESSING',    'gray'],
+    'NO_STUDENTS_ENROLLED': ['NOT ENROLLED',  'yellow']
+  };
+  const [label, color] = statusMap[r.status] || ['—', 'gray'];
+  setDet('det-status', label, color);
+
+  const banner = document.getElementById('session-alert');
+  if (r.status === 'SPOOF_REJECTED' && r.alert) {
+    banner.style.display = 'block';
+    document.getElementById('session-alert-text').textContent = r.alert.summary;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function updateSessionLog(r) {
+  if (r.status === 'PRESENT' && r.student_name) {
+    const exists = sessionLog.find(l => l.name === r.student_name);
+    if (!exists) {
+      sessionLog.push({name: r.student_name, confidence: r.confidence, time: new Date().toLocaleTimeString()});
+      renderSessionLog();
+    }
+  }
+}
+
+function renderSessionLog() {
+  const tbody = document.getElementById('session-log-table');
+  if (sessionLog.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3"><div class="empty">Waiting for students...</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = sessionLog.map(l => `
+    <tr>
+      <td>${l.name}</td>
+      <td>
+        <div class="conf-bar">
+          <div class="conf-track"><div class="conf-fill" style="width:${(l.confidence*100).toFixed(0)}%"></div></div>
+          <span style="font-size:11px;color:var(--green);font-family:var(--mono)">${(l.confidence*100).toFixed(1)}%</span>
+        </div>
+      </td>
+      <td style="font-size:11px">${l.time}</td>
+    </tr>
+  `).join('');
+}
+
+function setDet(id, text, color) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className   = `badge badge-${color}`;
+}
+
+// ── ENROLL ──
+async function enrollStudent() {
+  const studentId = document.getElementById('enroll-id').value.trim();
+  const name      = document.getElementById('enroll-name').value.trim();
+  if (!studentId || !name) { toast('Please enter Student ID and Name', 'error'); return; }
+  const res  = await fetch('/enroll', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({student_id: studentId, name: name})
+  });
+  const data = await res.json();
+  toast(data.message, 'success');
+  ['step1','step2','step3','step4','step5'].forEach((s, i) => {
+    setTimeout(() => document.getElementById(s).classList.add('active'), i * 800);
+  });
+  setTimeout(() => {
+    ['step1','step2','step3','step4','step5'].forEach(s => {
+      document.getElementById(s).classList.remove('active');
+      document.getElementById(s).classList.add('done');
+    });
+    loadStudents();
+    setTimeout(() => {
+      ['step1','step2','step3','step4','step5'].forEach(s => document.getElementById(s).classList.remove('done'));
+    }, 3000);
+  }, 5000);
+}
+
+// ── STUDENTS ──
+async function loadStudents() {
+  const res      = await fetch('/students_page');
+  const students = await res.json();
+  const tbody    = document.getElementById('students-table');
+  if (students.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty"><div class="icon">👥</div>No students enrolled</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = students.map(s => `
+    <tr>
+      <td style="font-family:var(--mono);font-size:12px">${s.student_id}</td>
+      <td>${s.name}</td>
+      <td style="font-size:11px;color:var(--muted)">${s.enrolled_at}</td>
+      <td>
+        <button onclick="deleteStudent('${s.student_id}')"
+          style="background:rgba(239,68,68,0.15);color:var(--red);
+                 border:1px solid rgba(239,68,68,0.3);padding:4px 10px;
+                 border-radius:6px;cursor:pointer;font-size:11px;font-weight:600">
+          Delete
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function deleteStudent(id) {
+  if (!confirm(`Delete student ${id}?`)) return;
+  const res  = await fetch('/delete_student', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({student_id: id})
+  });
+  const data = await res.json();
+  toast(data.message, data.success ? 'success' : 'error');
+  loadStudents();
+}
+
+// ── ATTENDANCE ──
+async function loadAttendance() {
+  const res     = await fetch('/attendance');
+  const records = await res.json();
+
+  const present  = records.filter(r => r.status === 'PRESENT').length;
+  const rejected = records.filter(r => r.status !== 'PRESENT').length;
+
+  const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  setEl('att-total',    records.length);
+  setEl('att-present',  present);
+  setEl('att-rejected', rejected);
+
+  const tbody = document.getElementById('attendance-full-table');
+  if (!tbody) return;
+
+  if (records.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="icon">📋</div>No records yet</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = records.reverse().map(r => `
+    <tr>
+      <td style="font-family:var(--mono);font-size:12px">${r.student_id}</td>
+      <td>${r.name}</td>
+      <td style="font-size:11px">${r.session_id}</td>
+      <td>
+        <div class="conf-bar">
+          <div class="conf-track"><div class="conf-fill" style="width:${(r.confidence*100).toFixed(0)}%"></div></div>
+          <span style="font-size:11px;color:var(--green);font-family:var(--mono)">${(r.confidence*100).toFixed(1)}%</span>
+        </div>
+      </td>
+      <td style="font-family:var(--mono);font-size:12px;
+        color:${r.spoof_prob > 0.4 ? 'var(--red)' : 'var(--green)'}">
+        ${r.spoof_prob.toFixed(2)} ${r.spoof_prob > 0.4 ? '⚠️' : '✓'}
+      </td>
+      <td>
+        <span class="badge ${r.status === 'PRESENT' ? 'badge-green' :
+                             r.status === 'ABSENT'  ? 'badge-red'   : 'badge-yellow'}">
+          ${r.status}
+        </span>
+      </td>
+      <td style="font-size:11px;color:var(--muted)">${r.timestamp}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="override-btn override-present"
+            onclick="manualMark('${r.student_id}','${r.session_id}','${r.name}','PRESENT')">
+            ✓ Present
+          </button>
+          <button class="override-btn override-absent"
+            onclick="manualMark('${r.student_id}','${r.session_id}','${r.name}','ABSENT')">
+            ✗ Absent
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  // Dashboard table
+  const dashTbody = document.getElementById('dash-attendance-table');
+  if (dashTbody) {
+    if (records.length === 0) {
+      dashTbody.innerHTML = '<tr><td colspan="4"><div class="empty">No records yet</div></td></tr>';
+    } else {
+      dashTbody.innerHTML = records.slice(0,5).map(r => `
+        <tr>
+          <td>${r.name}</td>
+          <td style="font-size:11px">${r.session_id}</td>
+          <td style="font-family:var(--mono);font-size:12px">${(r.confidence*100).toFixed(1)}%</td>
+          <td><span class="badge ${r.status === 'PRESENT' ? 'badge-green' : 'badge-red'}" style="font-size:10px">${r.status}</span></td>
+        </tr>
+      `).join('');
+    }
+  }
+}
+
+// ── MANUAL MARK ──
+async function manualMark(studentId, sessionId, studentName, status) {
+  const res  = await fetch('/manual_mark', {
+    method : 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body   : JSON.stringify({
+      student_id   : studentId,
+      session_id   : sessionId,
+      student_name : studentName,
+      status       : status
+    })
+  });
+  const data = await res.json();
+  toast(data.message, data.success ? 'success' : 'error');
+  loadAttendance();
+}
+
+// ── ALERTS ──
+async function loadAlerts() {
+  const res    = await fetch('/alerts');
+  const alerts = await res.json();
+
+  const container = document.getElementById('proxy-list');
+  if (container) {
+    if (alerts.length === 0) {
+      container.innerHTML = '<div class="card"><div class="empty"><div class="icon">✅</div>No proxy alerts recorded</div></div>';
+    } else {
+      container.innerHTML = alerts.reverse().map((a, i) => `
+        <div class="card" style="margin-bottom:16px">
+          <div class="proxy-card">
+            <div class="proxy-avatar">⚠️</div>
+            <div class="proxy-info">
+              <h3>Proxy Alert #${alerts.length - i}</h3>
+              <p>Session: ${a.session_id}</p>
+              <p style="margin-top:4px;font-size:11px;color:var(--muted)">${a.timestamp}</p>
+            </div>
+            <div class="proxy-badge">FLAGGED</div>
+          </div>
+          <div class="analysis-item">
+            <div class="analysis-icon">👁️</div>
+            <div class="analysis-text">
+              <strong>Blink Analysis</strong>
+              ${a.blink_count < 2
+                ? `Only ${a.blink_count} blink(s) detected. Normal humans blink 2+ times. Possible photo or screen.`
+                : `${a.blink_count} blinks detected — within normal range.`}
+            </div>
+          </div>
+          <div class="analysis-item">
+            <div class="analysis-icon">🫨</div>
+            <div class="analysis-text">
+              <strong>Head Movement</strong>
+              Movement variance: ${a.head_movement}.
+              ${a.head_movement < 3.0
+                ? 'Below normal threshold (3.0). Face appears static — possible photo attack.'
+                : 'Normal movement detected.'}
+            </div>
+          </div>
+          <div class="analysis-item">
+            <div class="analysis-icon">👀</div>
+            <div class="analysis-text">
+              <strong>Eye Aspect Ratio</strong>
+              EAR value: ${a.ear_value}.
+              ${a.ear_value < 0.25
+                ? 'Below normal (0.25). Eyes appear closed or absent.'
+                : 'Normal EAR detected.'}
+            </div>
+          </div>
+          <div class="spoof-meter">
+            <div class="spoof-meter-label">
+              <span style="color:var(--muted);font-size:12px">Spoof Probability</span>
+              <span style="font-family:var(--mono);color:var(--red)">${a.spoof_prob.toFixed(2)}</span>
+            </div>
+            <div class="spoof-track">
+              <div class="spoof-fill" style="width:${(a.spoof_prob*100).toFixed(0)}%"></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  const dashAlerts = document.getElementById('dash-alerts-table');
+  if (dashAlerts) {
+    if (alerts.length === 0) {
+      dashAlerts.innerHTML = '<tr><td colspan="3"><div class="empty"><div class="icon">✅</div>No alerts</div></td></tr>';
+    } else {
+      dashAlerts.innerHTML = alerts.slice(0,5).map(a => `
+        <tr>
+          <td style="font-size:11px">${a.session_id}</td>
+          <td><span class="badge badge-red" style="font-size:10px">${a.spoof_prob.toFixed(2)}</span></td>
+          <td style="font-size:11px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.reason}</td>
+        </tr>
+      `).join('');
+    }
+  }
+}
+
+// ── BEHAVIORAL ──
+async function loadBehavioral() {
+  const res    = await fetch('/alerts');
+  const alerts = await res.json();
+  const tbody  = document.getElementById('behavioral-table');
+
+  if (alerts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="icon">🧠</div>No behavioral data yet</div></td></tr>';
+    document.getElementById('beh-blink').textContent = '—';
+    document.getElementById('beh-move').textContent  = '—';
+    return;
+  }
+
+  const avgBlink = (alerts.reduce((s,a) => s + a.blink_count,    0) / alerts.length).toFixed(1);
+  const avgMove  = (alerts.reduce((s,a) => s + a.head_movement,  0) / alerts.length).toFixed(1);
+
+  document.getElementById('beh-blink').textContent     = avgBlink;
+  document.getElementById('beh-move').textContent      = avgMove;
+  document.getElementById('beh-blink-sub').textContent = 'avg blinks per detection';
+  document.getElementById('beh-move-sub').textContent  = 'avg movement variance';
+
+  const maxBlink = Math.max(...alerts.map(a => a.blink_count),   1);
+  const maxMove  = Math.max(...alerts.map(a => a.head_movement), 1);
+
+  document.getElementById('blink-chart').innerHTML = alerts.slice(-10).map(a =>
+    `<div class="bar ${a.blink_count >= 2 ? 'hi' : ''}" style="height:${Math.max((a.blink_count/maxBlink)*100,10)}%"></div>`
+  ).join('');
+
+  document.getElementById('move-chart').innerHTML = alerts.slice(-10).map(a =>
+    `<div class="bar ${a.head_movement >= 3 ? 'hi' : ''}" style="height:${Math.max((a.head_movement/maxMove)*100,10)}%"></div>`
+  ).join('');
+
+  tbody.innerHTML = alerts.reverse().map(a => `
+    <tr>
+      <td style="font-size:11px">${a.session_id}</td>
+      <td style="font-family:var(--mono)">${a.blink_count}</td>
+      <td style="font-family:var(--mono)">${a.head_movement}</td>
+      <td style="font-family:var(--mono)">${a.ear_value}</td>
+      <td><span class="badge ${a.spoof_prob > 0.4 ? 'badge-red' : 'badge-yellow'}">${a.spoof_prob.toFixed(2)}</span></td>
+      <td><span class="badge badge-red">SPOOF</span></td>
+      <td style="font-size:11px;color:var(--muted)">${a.timestamp}</td>
+    </tr>
+  `).join('');
+}
+
+// ── DASHBOARD ──
+async function loadDashboard() {
+  document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  const studRes  = await fetch('/students_page');
+  const students = await studRes.json();
+  document.getElementById('dash-total').textContent = students.length;
+
+  const attRes  = await fetch('/attendance');
+  const records = await attRes.json();
+  const present = records.filter(r => r.status === 'PRESENT').length;
+  const avgConf = records.length
+    ? (records.reduce((s,r) => s + r.confidence, 0) / records.length * 100).toFixed(1) + '%'
+    : '—';
+
+  document.getElementById('dash-present').textContent = present;
+  document.getElementById('dash-conf').textContent    = avgConf;
+
+  const altRes = await fetch('/alerts');
+  const alerts = await altRes.json();
+  document.getElementById('dash-alerts').textContent = alerts.length;
+
+  await loadAttendance();
+  await loadAlerts();
+}
+
+// ── REPORTS ──
+async function loadReports() {
+  const studRes  = await fetch('/students_page');
+  const students = await studRes.json();
+  const attRes   = await fetch('/attendance');
+  const records  = await attRes.json();
+  const altRes   = await fetch('/alerts');
+  const alerts   = await altRes.json();
+
+  const sessions = [...new Set(records.map(r => r.session_id))];
+  const present  = records.filter(r => r.status === 'PRESENT').length;
+  const avgConf  = records.length
+    ? (records.reduce((s,r) => s + r.confidence, 0) / records.length * 100).toFixed(1) + '%'
+    : '—';
+
+  document.getElementById('rep-students').textContent = students.length;
+  document.getElementById('rep-sessions').textContent = sessions.length;
+  document.getElementById('rep-present').textContent  = present;
+  document.getElementById('rep-alerts').textContent   = alerts.length;
+  document.getElementById('rep-conf').textContent     = avgConf;
+
+  const container = document.getElementById('session-report-list');
+  if (sessions.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="icon">📈</div>No sessions yet</div>';
+    return;
+  }
+
+  container.innerHTML = sessions.map(sid => {
+    const sr = records.filter(r => r.session_id === sid);
+    const sa = alerts.filter(a => a.session_id === sid);
+    const sp = sr.filter(r => r.status === 'PRESENT').length;
+    return `
+      <div class="report-row">
+        <div class="report-info">
+          <h4>${sid}</h4>
+          <p>${sr.length} records · ${sa.length} alerts</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="badge badge-green">${sp} Present</span>
+          ${sa.length > 0 ? `<span class="badge badge-red">${sa.length} Alerts</span>` : ''}
+          <button onclick="exportSessionCSV('${sid}')"
+            style="background:var(--surface2);color:var(--muted2);
+                   border:1px solid var(--border2);padding:5px 12px;
+                   border-radius:6px;cursor:pointer;font-size:11px;font-weight:600">
+            ⬇ Export
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── EXPORT ──
+async function exportCSV() {
+  const res     = await fetch('/attendance');
+  const records = await res.json();
+  const headers = ['Student ID','Name','Session','Confidence','Spoof Probability','Status','Timestamp'];
+  const rows    = records.map(r => [
+    r.student_id, r.name, r.session_id,
+    (r.confidence*100).toFixed(1)+'%',
+    r.spoof_prob.toFixed(2), r.status, r.timestamp
+  ]);
+  downloadCSV([headers, ...rows], 'attendance_export.csv');
+  toast('Attendance CSV exported', 'success');
+}
+
+async function exportAlerts() {
+  const res    = await fetch('/alerts');
+  const alerts = await res.json();
+  const headers = ['Session','Spoof Probability','Blink Count','Head Movement','EAR Value','Reason','Timestamp'];
+  const rows    = alerts.map(a => [a.session_id, a.spoof_prob, a.blink_count, a.head_movement, a.ear_value, a.reason, a.timestamp]);
+  downloadCSV([headers, ...rows], 'alerts_export.csv');
+  toast('Alerts CSV exported', 'success');
+}
+
+async function exportSessionCSV(sessionId) {
+  const res     = await fetch('/attendance');
+  const records = (await res.json()).filter(r => r.session_id === sessionId);
+  const headers = ['Student ID','Name','Confidence','Spoof Probability','Status','Timestamp'];
+  const rows    = records.map(r => [r.student_id, r.name, (r.confidence*100).toFixed(1)+'%', r.spoof_prob.toFixed(2), r.status, r.timestamp]);
+  downloadCSV([headers, ...rows], `${sessionId}.csv`);
+  toast(`Session ${sessionId} exported`, 'success');
+}
+
+function downloadCSV(rows, filename) {
+  const csv  = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── TOAST ──
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = (type === 'success' ? '✅ ' : '❌ ') + msg;
+  el.className   = `toast ${type} show`;
+  setTimeout(() => el.className = 'toast', 3000);
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
